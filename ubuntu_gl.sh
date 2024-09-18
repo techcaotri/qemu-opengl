@@ -31,7 +31,8 @@ MTYPE=pc-q35-6.2,accel=kvm,dump-guest-core=off,mem-merge=on,smm=on,vmport=off,nv
 ACCEL=accel=kvm,kvm-shadow-mem=256000000,kernel_irqchip=on
 UUID="$(uuidgen)"
 CPU=4,sockets=4,cores=1,threads=1
-BIOS=/usr/share/OVMF/OVMF_CODE_4M.ms.fd
+BIOS=${SCRIPT_DIR}/kde-neon_VARS.fd
+# BIOS=/usr/share/OVMF/OVMF_VARS_4M.ms.fd
 ISODIR=/applications/OS/isos
 VMDIR=/virtualisation
 VARS=${VMDIR}/ovmf/OVMF_VARS-${NETNAME}.fd
@@ -46,9 +47,10 @@ args=(
 	-m ${MEM}
 	# -smbios type=2,manufacturer="oliver",product="${NETNAME}starter",version="0.1",serial="0xDEADBEEF",location="github.com",asset="${NETNAME}"
 	# -bios ${BIOS}
+  # -drive if=pflash,format=raw,file=${BIOS}
 	-blockdev '{"driver":"file","filename":"/usr/share/OVMF/OVMF_CODE_4M.ms.fd","node-name":"libvirt-pflash0-storage","auto-read-only":true,"discard":"unmap"}'
 	-blockdev '{"node-name":"libvirt-pflash0-format","read-only":true,"driver":"raw","file":"libvirt-pflash0-storage"}'
-	-blockdev '{"driver":"file","filename":"${SCRIPT_DIR}/kde-neon_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}'
+	-blockdev '{"driver":"file","filename":"'${SCRIPT_DIR}'/kde-neon_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}'
 	-blockdev '{"node-name":"libvirt-pflash1-format","read-only":false,"driver":"raw","file":"libvirt-pflash1-storage"}'
 	-machine pc-q35-7.0,usb=off,vmport=off,smm=on,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,memory-backend=pc.ram
 	-mem-prealloc
@@ -74,14 +76,14 @@ args=(
 	# -audiodev pa,id=hda,server=/run/user/1000/pulse/native
 	# -device ich9-intel-hda,bus=pcie.0,addr=0x1b
 	# -device hda-micro,audiodev=hda
-  -audiodev pa,id=snd0,server=localhost -device AC97,audiodev=snd0
+	-audiodev pa,id=snd0,server=localhost -device AC97,audiodev=snd0
 	-device virtio-net,netdev=nic
 	-netdev user,hostname=kdeneon-user,hostfwd=tcp::22220-:22,id=nic
 	-chardev pty,id=charserial0
 	-device isa-serial,chardev=charserial0,id=serial0
 	-chardev spicevmc,id=charchannel1,name=vdagent
 	-chardev null,id=chrtpm
-  -virtfs local,path=/home/tripham/Downloads,mount_tag=hostshare,security_model=none,id=hostshare
+	-virtfs local,path=/home/tripham/Downloads,mount_tag=hostshare,security_model=none,id=hostshare
 	-msg timestamp=on
 
 )
@@ -101,9 +103,10 @@ fi
 # exec swtpm socket --tpm2 --tpmstate dir=/tmp/${NETNAME} --terminate --ctrl type=unixio,path=/tmp/${NETNAME}/swtpm-sock-${NETNAME} --daemon &
 
 echo "Start PulseAudio ..."
-pulseaudio --start --exit-idle-time=-1 
+pulseaudio --start --exit-idle-time=-1
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 
+echo ${BOOT_BIN} "${args[@]}"
 GTK_BACKEND=x11 GDK_BACKEND=x11 QT_BACKEND=x11 VDPAU_DRIVER="nvidia" ${BOOT_BIN} "${args[@]}"
 
 exit 0
