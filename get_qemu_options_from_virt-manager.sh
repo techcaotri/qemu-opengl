@@ -23,7 +23,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 
 echo -e "${LIGHTBLUE}Get QEMU command line options from virt-manager's kde-neon VM ...${NOCOLOR}"
-virsh dumpxml kde-neon > desktop_kde-neon_vm_config.xml
-virsh domxml-to-native qemu-argv desktop_kde-neon_vm_config.xml 2>&1 | tee desktop_kde-neon_vm_config.txt
-echo -e "${LIGHTBLUE}Formatting the output file: desktop_kde-neon_vm_config.txt ...${NOCOLOR}"
-sed -i 's/ -/\n-/g' desktop_kde-neon_vm_config.txt
+virsh dumpxml kde-neon-new > desktop_kde-neon-new_vm_config.xml
+virsh domxml-to-native qemu-argv desktop_kde-neon-new_vm_config.xml 2>&1 | tee desktop_kde-neon-new_vm_config.txt
+echo -e "${LIGHTBLUE}Formatting the output file: desktop_kde-neon-new_vm_config.txt ...${NOCOLOR}"
+sed -i 's/ -/\n-/g' desktop_kde-neon-new_vm_config.txt
