@@ -83,7 +83,8 @@ args=(
 	-device isa-serial,chardev=charserial0,id=serial0
 	-chardev spicevmc,id=charchannel1,name=vdagent
 	-chardev null,id=chrtpm
-	-virtfs local,path=/home/tripham/Downloads,mount_tag=hostshare,security_model=none,id=hostshare
+  -chardev socket,id=char0,path=/tmp/vhostqemu
+  -device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host_downloads
 	-msg timestamp=on
 
 )
@@ -102,9 +103,12 @@ fi
 # get tpm going
 # exec swtpm socket --tpm2 --tpmstate dir=/tmp/${NETNAME} --terminate --ctrl type=unixio,path=/tmp/${NETNAME}/swtpm-sock-${NETNAME} --daemon &
 
-echo "Start PulseAudio ..."
+echo -e "${LIGHTBLUE}Start PulseAudio audio server...${NOCOLOR}"
 pulseaudio --start --exit-idle-time=-1
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
+
+echo -e "${LIGHTBLUE}Start VirtioFS Daemon virtiofsd for sharing Downloads directory ...${NOCOLOR}"
+sudo /usr/lib/qemu/virtiofsd --socket-path=/tmp/vhostqemu --socket-group=tripham -o source=/home/tripham/Downloads/ -o allow_direct_io -o cache=always &
 
 echo ${BOOT_BIN} "${args[@]}"
 GTK_BACKEND=x11 GDK_BACKEND=x11 QT_BACKEND=x11 VDPAU_DRIVER="nvidia" ${BOOT_BIN} "${args[@]}"
