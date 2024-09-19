@@ -27,7 +27,7 @@ NETNAME=ubuntu
 HOSTNAME=${NETNAME}
 MEM=12G
 DP=sdl,gl=on
-MTYPE=pc-q35-6.2,accel=kvm,dump-guest-core=off,mem-merge=on,smm=on,vmport=off,nvdimm=off,hmat=on,memory-backend=mem1
+MTYPE=q35,usb=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,mem-merge=on,smm=on,vmport=off,nvdimm=off,hmat=on,memory-backend=mem1
 ACCEL=accel=kvm,kvm-shadow-mem=256000000,kernel_irqchip=on
 UUID="$(uuidgen)"
 CPU=4,sockets=4,cores=1,threads=1
@@ -47,18 +47,17 @@ args=(
 	-m ${MEM}
 	# -smbios type=2,manufacturer="oliver",product="${NETNAME}starter",version="0.1",serial="0xDEADBEEF",location="github.com",asset="${NETNAME}"
 	# -bios ${BIOS}
-  # -drive if=pflash,format=raw,file=${BIOS}
+	# -drive if=pflash,format=raw,file=${BIOS}
 	-blockdev '{"driver":"file","filename":"/usr/share/OVMF/OVMF_CODE_4M.ms.fd","node-name":"libvirt-pflash0-storage","auto-read-only":true,"discard":"unmap"}'
 	-blockdev '{"node-name":"libvirt-pflash0-format","read-only":true,"driver":"raw","file":"libvirt-pflash0-storage"}'
-	-blockdev '{"driver":"file","filename":"'${SCRIPT_DIR}'/kde-neon_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}'
+	-blockdev '{"driver":"file","filename":"/var/lib/libvirt/qemu/nvram/kde-neon-new_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}'
 	-blockdev '{"node-name":"libvirt-pflash1-format","read-only":false,"driver":"raw","file":"libvirt-pflash1-storage"}'
-	-machine pc-q35-7.0,usb=off,vmport=off,smm=on,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,memory-backend=pc.ram
+	-machine ${MTYPE},${ACCEL}
 	-mem-prealloc
 	-rtc base=localtime
-	-drive file=/var/lib/libvirt/images/kde-neon.img,if=virtio,format=raw,cache=writeback
+	-drive file=/var/lib/libvirt/images/kde-neon-new.qcow2,if=virtio,format=qcow2,cache=writeback
 	-enable-kvm
 	-object memory-backend-memfd,id=mem1,share=on,size=${MEM}
-	-machine ${MTYPE},${ACCEL}
 	-overcommit mem-lock=off
 	-object rng-random,id=objrng0,filename=/dev/urandom
 	-device virtio-rng-pci,rng=objrng0,id=rng0
@@ -83,9 +82,9 @@ args=(
 	-device isa-serial,chardev=charserial0,id=serial0
 	-chardev spicevmc,id=charchannel1,name=vdagent
 	-chardev null,id=chrtpm
-	-virtfs local,path=/home/tripham/Downloads,mount_tag=hostshare,security_model=none,id=hostshare
+  -chardev socket,id=char0,path=/tmp/vhostqemu
+  -device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host_downloads
 	-msg timestamp=on
-
 )
 
 # check if the bridge is up, if not, dont let us pass here
@@ -102,10 +101,14 @@ fi
 # get tpm going
 # exec swtpm socket --tpm2 --tpmstate dir=/tmp/${NETNAME} --terminate --ctrl type=unixio,path=/tmp/${NETNAME}/swtpm-sock-${NETNAME} --daemon &
 
-echo "Start PulseAudio ..."
+echo -e "${LIGHTBLUE}Start PulseAudio audio server...${NOCOLOR}"
 pulseaudio --start --exit-idle-time=-1
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 
+echo -e "${LIGHTBLUE}Start VirtioFS Daemon virtiofsd for sharing Downloads directory ...${NOCOLOR}"
+sudo /usr/lib/qemu/virtiofsd --socket-path=/tmp/vhostqemu --socket-group=tripham -o source=/home/tripham/Downloads/ -o allow_direct_io -o cache=always &
+
+echo -e "${LIGHTBLUE}Start the VM using QEMU ...${NOCOLOR}"
 echo ${BOOT_BIN} "${args[@]}"
 GTK_BACKEND=x11 GDK_BACKEND=x11 QT_BACKEND=x11 VDPAU_DRIVER="nvidia" ${BOOT_BIN} "${args[@]}"
 
