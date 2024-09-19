@@ -47,7 +47,7 @@ args=(
 	-m ${MEM}
 	# -smbios type=2,manufacturer="oliver",product="${NETNAME}starter",version="0.1",serial="0xDEADBEEF",location="github.com",asset="${NETNAME}"
 	# -bios ${BIOS}
-  # -drive if=pflash,format=raw,file=${BIOS}
+	# -drive if=pflash,format=raw,file=${BIOS}
 	-blockdev '{"driver":"file","filename":"/usr/share/OVMF/OVMF_CODE_4M.ms.fd","node-name":"libvirt-pflash0-storage","auto-read-only":true,"discard":"unmap"}'
 	-blockdev '{"node-name":"libvirt-pflash0-format","read-only":true,"driver":"raw","file":"libvirt-pflash0-storage"}'
 	-blockdev '{"driver":"file","filename":"'${SCRIPT_DIR}'/kde-neon_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}'
@@ -78,13 +78,15 @@ args=(
 	# -device hda-micro,audiodev=hda
 	-audiodev pa,id=snd0,server=localhost -device AC97,audiodev=snd0
 	-device virtio-net,netdev=nic
-	-netdev user,hostname=kdeneon-user,hostfwd=tcp::22220-:22,id=nic
+	-netdev user,hostname=kdeneon-user,hostfwd=tcp::22220-:22,hostfwd=tcp::5100-:5100,id=nic
 	-chardev pty,id=charserial0
 	-device isa-serial,chardev=charserial0,id=serial0
-	-chardev spicevmc,id=charchannel1,name=vdagent
+	-device virtio-serial
+	-chardev spicevmc,id=vdagent,debug=1,name=vdagent
+	-device virtserialport,chardev=vdagent,name=com.redhat.spice.0
 	-chardev null,id=chrtpm
-  -chardev socket,id=char0,path=/tmp/vhostqemu
-  -device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host_downloads
+	-chardev socket,id=char0,path=/tmp/vhostqemu
+	-device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host_downloads
 	-msg timestamp=on
 
 )
@@ -108,6 +110,7 @@ pulseaudio --start --exit-idle-time=-1
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 
 echo -e "${LIGHTBLUE}Start VirtioFS Daemon virtiofsd for sharing Downloads directory ...${NOCOLOR}"
+sudo rm -f /tmp/vhostqemu
 sudo /usr/lib/qemu/virtiofsd --socket-path=/tmp/vhostqemu --socket-group=tripham -o source=/home/tripham/Downloads/ -o allow_direct_io -o cache=always &
 
 echo ${BOOT_BIN} "${args[@]}"
