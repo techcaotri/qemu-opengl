@@ -32,75 +32,49 @@ echo -e "${LIGHTBLUE}Creating kde-neon-new VM ...${NOCOLOR}"
 # Create the disk image
 # sudo qemu-img create -f qcow2 "${DISK_PATH}" "${DISK_SIZE}"
 
-# virt-install \
-#   --debug \
-# 	--name "${VM_NAME}" \
-# 	--memory 12288 \
-# 	--vcpus 4,sockets=4,cores=1,threads=1 \
-# 	--cpu host-model,topology.sockets=4,topology.cores=1,topology.threads=1 \
-# 	--machine q35 \
-# 	--boot uefi \
-# 	--disk size=100,bus=virtio,cache=writeback,format=qcow2 \
-# 	--disk /usr/share/OVMF/OVMF_CODE_4M.ms.fd,readonly=on \
-# 	--disk /home/tripham/Dev/Playground_QEMU/qemu-opengl/kde-neon_VARS.fd \
-# 	--cdrom "${ISO_PATH}" \
-# 	--network network=default,model=virtio \
-# 	--graphics sdl,gl=on,clipboard.copypaste=yes \
-# 	--video virtio \
-# 	--input tablet,bus=usb \
-# 	--rng /dev/urandom \
-# 	--serial pty \
-# 	--console pty \
-# 	--channel spicevmc \
-# 	--tpm none \
-# 	--memballoon virtio \
-# 	--controller usb,model=ich9-ehci1,index=0 \
-# 	--controller usb,model=ich9-uhci1,index=0,master=0 \
-# 	--controller usb,model=ich9-uhci2,index=0,master=2 \
-# 	--controller usb,model=ich9-uhci3,index=0,master=4 \
-# 	--controller virtio-serial \
-# 	--filesystem /home/tripham/Downloads,hostshare,accessmode=passthrough \
-#   --virt-type kvm \
-# 	--features smm=on \
-# 	--clock offset=localtime \
-#   --qemu-commandline="-overcommit mem-lock=off" \
-#   --qemu-commandline="-object memory-backend-memfd,id=mem1,share=on,size=12G" \
-#   --qemu-commandline="-machine pc-q35-6.2,dump-guest-core=off,mem-merge=on,smm=on,nvdimm=off,hmat=on,memory-backend=mem1,kvm-shadow-mem=256000000,kernel_irqchip=on" \
-#   --qemu-commandline="-k de" \
-#   --qemu-commandline="-global ICH9-LPC.disable_s3=1" \
-#   --qemu-commandline="-global ICH9-LPC.disable_s4=1" \
-#   --qemu-commandline="-chardev null,id=chrtpm" \
-#   --qemu-commandline="-msg timestamp=on" \
-# 	--osinfo detect=on,name=linux2022 \
-# 	--noautoconsole 
 virt-install \
-  --debug \
+	--debug \
 	--name "${VM_NAME}" \
+	--arch x86_64 \
 	--memory 12288 \
 	--vcpus 4,sockets=4,cores=1,threads=1 \
 	--cpu host-model,topology.sockets=4,topology.cores=1,topology.threads=1 \
 	--machine q35 \
 	--boot uefi \
 	--disk size=100,bus=virtio,cache=writeback,format=qcow2 \
-	--disk /usr/share/OVMF/OVMF_CODE_4M.ms.fd,readonly=on \
-	--disk /home/tripham/Dev/Playground_QEMU/qemu-opengl/kde-neon_VARS.fd \
 	--cdrom "${ISO_PATH}" \
-	--graphics sdl,gl=on,clipboard.copypaste=yes \
+	--graphics clipboard.copypaste=yes \
 	--video virtio \
 	--input tablet,bus=usb \
 	--rng /dev/urandom \
 	--serial pty \
 	--console pty \
 	--channel spicevmc \
-  --virt-type kvm \
+	--virt-type kvm \
 	--features smm=on \
 	--clock offset=localtime \
-  --qemu-commandline="-overcommit mem-lock=off" \
-  --qemu-commandline="-object memory-backend-memfd,id=mem1,share=on,size=12G" \
-  --qemu-commandline="-machine dump-guest-core=off,mem-merge=on,smm=on,nvdimm=off,hmat=on,memory-backend=mem1,kvm-shadow-mem=256000000,kernel_irqchip=on" \
-  --qemu-commandline="-k de" \
-  --qemu-commandline="-msg timestamp=on" \
-  --connect qemu:///system \
+	--qemu-commandline="-overcommit mem-lock=off" \
+	--qemu-commandline="-object memory-backend-memfd,id=mem1,share=on,size=12G" \
+	--qemu-commandline="-machine dump-guest-core=off,mem-merge=on,smm=on,nvdimm=off,hmat=on,memory-backend=mem1,kvm-shadow-mem=256000000,kernel_irqchip=on" \
+	--qemu-commandline="-k de" \
+	--qemu-commandline="-msg timestamp=on" \
+	--connect qemu:///system \
 	--osinfo detect=on,name=linux2022 \
-	--noautoconsole 
+	--filesystem=/home/tripham/Downloads/,host_downloads,driver.type=virtiofs \
+	--memorybacking=source.type=memfd,access.mode=shared \
+	--noautoconsole
 
+echo -e "${LIGHTBLUE}Change mode of '/var/lib/libvirt/qemu/nvram/kde-neon-new_VARS.fd' for running by 'ubuntu_gl' script.${NOCOLOR}"
+cp /var/lib/libvirt/qemu/nvram/kde-neon-new_VARS.fd .
+echo -e "${LIGHTBLUE}Change mode of '/var/lib/libvirt/images/kde-neon-new.qcow2' for running by 'ubuntu_gl' script.${NOCOLOR}"
+sudo chmod a+rw /var/lib/libvirt/images/kde-neon-new.qcow2
+
+echo -e "${LIGHTBLUE}- The kde-neon VM is running in the background. Please start 'virt-manager' to continue the OS installation.${NOCOLOR}"
+echo -e "${LIGHTBLUE}- After finishing the OS installation. Please use the following script to setup shared folder on the guest VM.${NOCOLOR}"
+echo -e "${LIGHTGREEN}
+mkdir -p ~/host_downloads
+
+sudo tee -a /etc/fstab <<EOF
+host_downloads /home/tripham/host_downloads virtiofs defaults 0 0
+EOF
+${NOCOLOR}"
