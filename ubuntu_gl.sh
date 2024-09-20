@@ -30,7 +30,7 @@ DP=sdl,gl=on
 MTYPE=pc-q35-6.2,accel=kvm,dump-guest-core=off,mem-merge=on,smm=on,vmport=off,nvdimm=off,hmat=on,memory-backend=mem1
 ACCEL=accel=kvm,kvm-shadow-mem=256000000,kernel_irqchip=on
 UUID="$(uuidgen)"
-CPU=4,sockets=4,cores=1,threads=1
+CPU=8,sockets=4,cores=2,threads=1
 BIOS=${SCRIPT_DIR}/kde-neon_VARS.fd
 # BIOS=/usr/share/OVMF/OVMF_VARS_4M.ms.fd
 ISODIR=/applications/OS/isos
