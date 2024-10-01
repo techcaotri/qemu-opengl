@@ -65,7 +65,7 @@ BOOT_BIN=/usr/bin/qemu-system-x86_64
 NETNAME=ubuntu
 # MAC=$(grep -e "${NETNAME}=" macs.txt |cut -d"=" -f 2)
 HOSTNAME=${NETNAME}
-MEM=16G
+MEM=24G
 DP=sdl,gl=on
 MTYPE=q35,usb=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,mem-merge=on,smm=on,vmport=off,nvdimm=off,hmat=on,memory-backend=mem1
 ACCEL=accel=kvm,kvm-shadow-mem=256000000,kernel_irqchip=on
@@ -90,7 +90,7 @@ args=(
 	# -drive if=pflash,format=raw,file=${BIOS}
 	-blockdev '{"driver":"file","filename":"/usr/share/OVMF/OVMF_CODE_4M.ms.fd","node-name":"libvirt-pflash0-storage","auto-read-only":true,"discard":"unmap"}'
 	-blockdev '{"node-name":"libvirt-pflash0-format","read-only":true,"driver":"raw","file":"libvirt-pflash0-storage"}'
-	-blockdev '{"driver":"file","filename":"/var/lib/libvirt/qemu/nvram/kde-neon_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}'
+	-blockdev '{"driver":"file","filename":"'$SCRIPT_DIR'/kde-neon_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}'
 	-blockdev '{"node-name":"libvirt-pflash1-format","read-only":false,"driver":"raw","file":"libvirt-pflash1-storage"}'
 	-machine ${MTYPE},${ACCEL}
 	-mem-prealloc
