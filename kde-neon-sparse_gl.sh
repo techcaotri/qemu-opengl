@@ -115,7 +115,9 @@ args=(
 	# -audiodev pa,id=hda,server=/run/user/1000/pulse/native
 	# -device ich9-intel-hda,bus=pcie.0,addr=0x1b
 	# -device hda-micro,audiodev=hda
-	-audiodev pa,id=snd0,server=localhost -device AC97,audiodev=snd0
+  -device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b
+  -device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0
+  -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1
 	-device virtio-net,netdev=nic
 	-netdev user,hostname=kdeneon-user,hostfwd=tcp::22220-:22,id=nic
 	-chardev pty,id=charserial0
@@ -140,10 +142,6 @@ fi
 
 # get tpm going
 # exec swtpm socket --tpm2 --tpmstate dir=/tmp/${NETNAME} --terminate --ctrl type=unixio,path=/tmp/${NETNAME}/swtpm-sock-${NETNAME} --daemon &
-
-echo -e "${LIGHTBLUE}Start PulseAudio audio server...${NOCOLOR}"
-pulseaudio --start --exit-idle-time=-1
-pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 
 echo -e "${LIGHTBLUE}Start VirtioFS Daemon virtiofsd for sharing Downloads directory ...${NOCOLOR}"
 sudo rm /tmp/vhostqemu
