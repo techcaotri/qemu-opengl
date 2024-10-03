@@ -36,12 +36,12 @@ virt-install \
 	--debug \
 	--name "${VM_NAME}" \
 	--arch x86_64 \
-	--memory 12288 \
-	--vcpus 4,sockets=4,cores=1,threads=1 \
+	--memory 24576 \
+	--vcpus 8,sockets=4,cores=2,threads=1 \
 	--cpu host-model,topology.sockets=4,topology.cores=1,topology.threads=1 \
 	--machine q35 \
 	--boot uefi \
-	--disk size=100,bus=virtio,cache=writeback,format=qcow2 \
+	--disk size=150,bus=virtio,cache=writeback,format=qcow2 \
 	--cdrom "${ISO_PATH}" \
 	--graphics clipboard.copypaste=yes \
 	--video virtio \
@@ -65,6 +65,8 @@ virt-install \
 	--noautoconsole
 
 echo -e "${LIGHTBLUE}Change mode of '/var/lib/libvirt/qemu/nvram/kde-neon-new_VARS.fd' for running by 'ubuntu_gl' script.${NOCOLOR}"
+cp /var/lib/libvirt/qemu/nvram/kde-neon-new_VARS.fd .
+echo -e "${LIGHTBLUE}Copy '/var/lib/libvirt/qemu/nvram/kde-neon-new_VARS.fd' to the current directory.${NOCOLOR}"
 cp /var/lib/libvirt/qemu/nvram/kde-neon-new_VARS.fd .
 echo -e "${LIGHTBLUE}Change mode of '/var/lib/libvirt/images/kde-neon-new.qcow2' for running by 'ubuntu_gl' script.${NOCOLOR}"
 sudo chmod a+rw /var/lib/libvirt/images/kde-neon-new.qcow2
