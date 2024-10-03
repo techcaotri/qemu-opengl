@@ -34,31 +34,7 @@ run_uniclip() {
 	# Capture the process ID
 	UNICLIP_PID=$!
 
-	echo "uniclip server is running in the background with PID $UNICLIP_PID"
-
-	# Function to extract IP:Port from the log file
-	extract_ip_port() {
-		grep "Run \`uniclip" "$LOG_FILE" | awk -F'`' '{print $2}' | awk '{print $2}'
-	}
-
-	# Wait for the IP:Port information to appear in the log file
-	echo "Waiting for IP:Port information..."
-	for i in {1..30}; do
-		IP_PORT=$(extract_ip_port)
-		if [ -n "$IP_PORT" ]; then
-			echo "Extracted IP:Port is $IP_PORT"
-			uniclip "$IP_PORT" &
-			break
-		fi
-		sleep 1
-	done
-
-	# Check if we successfully extracted the IP:Port
-	if [ -z "$IP_PORT" ]; then
-		echo "Failed to extract IP:Port within 30 seconds. Check the log file at $LOG_FILE"
-	fi
-
-	echo "uniclip server is still running in the background. To stop it, use: kill $UNICLIP_PID"
+	echo "uniclip server is still running in the background with PID $UNICLIP_PID. To stop it, use: kill $UNICLIP_PID"
 }
 
 BOOT_BIN=/usr/bin/qemu-system-x86_64
