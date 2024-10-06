@@ -79,9 +79,14 @@ args=(
 	-object rng-random,id=objrng0,filename=/dev/urandom
 	-device virtio-rng-pci,rng=objrng0,id=rng0
 	-device virtio-serial-pci
-	-device virtio-vga-gl,xres=2560,yres=1440
-	-vga none
-	-display ${DP}
+	# -device virtio-vga-gl,xres=2560,yres=1440
+	# -vga none
+	# -display ${DP}
+
+  -device qxl-vga
+  -global qxl-vga.ram_size=6291456 -global qxl-vga.vram_size=6291456 -global qxl-vga.vgamem_mb=6144
+  -spice agent-mouse=off,addr=/tmp/${NETNAME}/spice.sock,unix=on,disable-ticketing=on,rendernode=${NV_RENDER}
+
 	-usb
 	-device usb-tablet
 	-monitor stdio
@@ -89,9 +94,13 @@ args=(
 	-global ICH9-LPC.disable_s3=1
 	-global ICH9-LPC.disable_s4=1
 	-device ide-cd,bus=ide.0,id=sata0-0-0
-	# -audiodev pa,id=hda,server=/run/user/1000/pulse/native
-	# -device ich9-intel-hda,bus=pcie.0,addr=0x1b
-	# -device hda-micro,audiodev=hda
+
+	-device virtio-serial
+	-chardev socket,path=/tmp/qga.sock,server=on,wait=off,id=qga0
+	-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0
+	-chardev spicevmc,id=ch1,name=vdagent,clipboard=on
+	-device virtserialport,chardev=ch1,id=ch1,name=com.redhat.spice.0
+
   -device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b
   -device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0
   -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1
@@ -99,9 +108,6 @@ args=(
 	-netdev user,hostname=kdeneon-user,hostfwd=tcp::22220-:22,id=nic
 	-chardev pty,id=charserial0
 	-device isa-serial,chardev=charserial0,id=serial0
-	-device virtio-serial
-	-chardev spicevmc,id=vdagent,debug=1,name=vdagent
-	-device virtserialport,chardev=vdagent,name=com.redhat.spice.0
 	-chardev null,id=chrtpm
 	-chardev socket,id=char0,path=/tmp/vhostqemu
 	-device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host_downloads
