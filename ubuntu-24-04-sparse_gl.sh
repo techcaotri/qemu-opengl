@@ -37,17 +37,19 @@ run_uniclip() {
 	echo "uniclip server is still running in the background with PID $UNICLIP_PID. To stop it, use: kill $UNICLIP_PID"
 }
 
-BOOT_BIN=/usr/local/bin/qemu-system-x86_64
+BOOT_BIN=/usr/bin/qemu-system-x86_64
 NETNAME=ubuntu
 # MAC=$(grep -e "${NETNAME}=" macs.txt |cut -d"=" -f 2)
 HOSTNAME=${NETNAME}
-MEM=24G
+# MEM=24G
+MEM=12G
 # DP=sdl,gl=on
-DP=gtk,gl=on
+DP=gtk,gl=on,grab-on-hover=on
 MTYPE=q35,usb=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,mem-merge=on,smm=on,vmport=off,nvdimm=off,hmat=on,memory-backend=mem1
 ACCEL=accel=kvm,kvm-shadow-mem=256000000,kernel_irqchip=on
 UUID="$(uuidgen)"
-CPU=8,sockets=4,cores=2,threads=1
+# CPU=8,sockets=4,cores=2,threads=1
+CPU=4,sockets=4,cores=1,threads=1
 BIOS=${SCRIPT_DIR}/ubuntu-24-04_VARS.fd
 # BIOS=/usr/share/OVMF/OVMF_VARS_4M.ms.fd
 ISODIR=/applications/OS/isos
@@ -73,6 +75,7 @@ args=(
 	-mem-prealloc
 	-rtc base=localtime
 	-drive file=/var/lib/libvirt/images/ubuntu-24-04.qcow2,if=virtio,format=qcow2,cache=writeback
+	# -drive file=/var/lib/libvirt/images/ubuntu-24-04.qcow2,if=virtio
 	-enable-kvm
 	-object memory-backend-memfd,id=mem1,share=on,size=${MEM}
 	-overcommit mem-lock=off
@@ -81,7 +84,7 @@ args=(
 	-device virtio-serial-pci
 	-device virtio-vga-gl,xres=2560,yres=1440
 	-vga none
-  # -vga virtio
+	# -vga virtio
 	-display ${DP}
 	-usb
 	-device usb-tablet
@@ -92,27 +95,31 @@ args=(
 	-device ide-cd,bus=ide.0,id=sata0-0-0
 	-device virtio-serial-pci
 	-chardev socket,id=charchannel0,path="${NETNAME}-agent.sock",server=on,wait=off
-	# -chardev socket,id=charchannel0,server=on,wait=off
 	-device virtserialport,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
-  # -device virtio-serial,packed=on,ioeventfd=on
+	-device virtio-serial,packed=on,ioeventfd=on
 	-chardev qemu-vdagent,id=charchannel1,name=vdagent,clipboard=on
 	-device virtserialport,chardev=charchannel1,id=channel1,name=com.redhat.spice.0
 
-  # -device virtio-serial
-  # -chardev socket,path=/tmp/qga.sock,server=on,wait=off,id=qga0
-  # -device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0
-  # -chardev spicevmc,id=ch1,name=vdagent,clipboard=on
-  # -device virtserialport,chardev=ch1,id=ch1,name=com.redhat.spice.0
+	# -device virtio-serial
+	# -chardev socket,path=/tmp/qga.sock,server=on,wait=off,id=qga0
+	# -device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0
+	# -chardev spicevmc,id=ch1,name=vdagent,clipboard=on
+	# -device virtserialport,chardev=ch1,id=ch1,name=com.redhat.spice.0
 
 	-device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b
 	-device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0
 	-global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1
-	-device virtio-net,netdev=nic
-	-netdev user,hostname=kdeneon-user,hostfwd=tcp::22220-:22,id=nic
+	# -device virtio-net,netdev=nic
+	# -netdev user,hostname=kdeneon-user,hostfwd=tcp::22221-:22,id=nic
+  -netdev bridge,id=hn0,br=virbr0
+	-device virtio-net-pci,netdev=hn0,id=nic1,mac=e6:c8:ff:09:76:9c
+	# -netdev socket,id=vlan,mcast=239.0.0.1:14000
+	# -device virtio-net-pci,netdev=vlan
+  
 	-chardev pty,id=charserial0
 	-device isa-serial,chardev=charserial0,id=serial0
 	-chardev null,id=chrtpm
-	-chardev socket,id=char0,path=/tmp/vhostqemu
+	-chardev socket,id=char0,path=/tmp/vhostqemu_ubuntu_24_04
 	-device vhost-user-fs-pci,queue-size=1024,chardev=char0,tag=host_downloads
 	-msg timestamp=on
 )
@@ -132,8 +139,8 @@ fi
 # exec swtpm socket --tpm2 --tpmstate dir=/tmp/${NETNAME} --terminate --ctrl type=unixio,path=/tmp/${NETNAME}/swtpm-sock-${NETNAME} --daemon &
 
 echo -e "${LIGHTBLUE}Start VirtioFS Daemon virtiofsd for sharing Downloads directory ...${NOCOLOR}"
-sudo rm /tmp/vhostqemu
-sudo /usr/lib/qemu/virtiofsd --socket-path=/tmp/vhostqemu --socket-group=tripham -o source=/home/tripham/Downloads/ -o allow_direct_io -o cache=always &
+sudo rm /tmp/vhostqemu_ubuntu_24_04
+sudo /usr/lib/qemu/virtiofsd --socket-path=/tmp/vhostqemu_ubuntu_24_04 --socket-group=tripham -o source=/home/tripham/Downloads/ -o allow_direct_io -o cache=always &
 
 # run_uniclip
 
@@ -142,6 +149,7 @@ rm -rf "${NETNAME}-agent.sock"
 
 echo -e "${LIGHTBLUE}Start the VM using QEMU ...${NOCOLOR}"
 echo ${BOOT_BIN} "${args[@]}"
+# __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia GDK_SCALE=1 GTK_BACKEND=x11 GDK_BACKEND=x11 QT_BACKEND=x11 VDPAU_DRIVER="nvidia" ${BOOT_BIN} "${args[@]}"
 GDK_SCALE=1 GTK_BACKEND=x11 GDK_BACKEND=x11 QT_BACKEND=x11 VDPAU_DRIVER="nvidia" ${BOOT_BIN} "${args[@]}"
 
 exit 0
