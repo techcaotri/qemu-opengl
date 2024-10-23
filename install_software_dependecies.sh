@@ -27,3 +27,13 @@ sudo apt install -y quickemu quickgui
 sudo apt install -y qemu-system qemu-system-x86 qemu-system-arm qemu-utils
 sudo apt install -y libvirt-clients libvirt-dev
 
+read -p "Do you want to install the virt-manager and virt-viewer (y/n)?" choice
+case "$choice" in
+y | Y)
+	echo -e "${LIGHTBLUE}Install the virt-manager and virt-viewer ...${NOCOLOR}"
+	sudo apt install -y virt-manager virt-viewer
+	;;
+n | N | *)
+	echo "Ignore installing the virt-manager and virt-viewer."
+	;;
+esac
