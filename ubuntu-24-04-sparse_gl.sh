@@ -43,8 +43,8 @@ NETNAME=ubuntu
 HOSTNAME=${NETNAME}
 # MEM=24G
 MEM=12G
-# DP=sdl,gl=on
-DP=gtk,gl=on,grab-on-hover=on
+DP=sdl,gl=on
+# DP=gtk,gl=on,grab-on-hover=on
 MTYPE=q35,usb=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,mem-merge=on,smm=on,vmport=off,nvdimm=off,hmat=on,memory-backend=mem1
 ACCEL=accel=kvm,kvm-shadow-mem=256000000,kernel_irqchip=on
 UUID="$(uuidgen)"
