@@ -2,7 +2,7 @@
 Playground for QEMU with OpenGL, Audio, Shared Folder, Copy &amp; Paste, etc.
 
 ## Steps
-1. Install the prerequisite softwares, **virt-manager**, **qemu** version 7.0, etc.
+1. Install the prerequisite softwares: **virt-manager**, **qemu** version 7.0, etc.
  ```
  $ ./install_software_dependecies.sh
  ```
