@@ -15,10 +15,10 @@ Playground for QEMU with OpenGL, Audio, Shared Folder, Copy &amp; Paste, etc.
  ```
 3. Open the **virt-manager** app to continue the OS installation
 4. There're 2 ways to run the VMs:
- + Use **SPICE** with `remote-viewer.sh` script to run the VM with client-server displaying mode.
- This mode supports both file sharing and clipboard sharing between host and guest VMs. However, the latency is a little bit high but acceptable.
- + Use the `ubuntu-24-04-sparse-gl.sh` script to run the VM with SDL OpenGL mode. This mode gives the best latency performance.
- However, it doesn't support clipboard sharing out-of-the-box, only file sharing. Still, the clipboard sharing could also be achieved using the `uniclip` tool.
+  + Use **SPICE** with `remote-viewer.sh` script to run the VM with client-server displaying mode.
+  This mode supports both file sharing and clipboard sharing between host and guest VMs. However, the latency is a little bit high but acceptable.
+  + Use the `ubuntu-24-04-sparse-gl.sh` script to run the VM with SDL OpenGL mode. This mode gives the best latency performance.
+  However, it doesn't support clipboard sharing out-of-the-box, only file sharing. Still, the clipboard sharing could also be achieved using the `uniclip` tool.
 
  ## Tips:
  Use the `get_qemu_options_from_virt-manager***.sh` script to get and analyze the QEMU options from the specific libvirt VM.
