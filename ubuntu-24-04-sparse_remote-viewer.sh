@@ -44,9 +44,9 @@ HOSTNAME=${NETNAME}
 MEM=24G
 # nvidia render node
 NV_RENDER=/dev/dri/by-path/pci-0000:24:00.0-render
-DP=sdl,gl=on
+# DP=sdl,gl=on
 # DP=gtk,gl=on,show-cursor=on
-# DP=egl-headless,rendernode=${NV_RENDER}
+DP=egl-headless,rendernode=${NV_RENDER}
 MTYPE=q35,usb=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,mem-merge=on,smm=on,vmport=off,nvdimm=off,hmat=on,memory-backend=mem1
 ACCEL=accel=kvm,kvm-shadow-mem=256000000,kernel_irqchip=on
 UUID="$(uuidgen)"
@@ -82,14 +82,14 @@ args=(
 	-object rng-random,id=objrng0,filename=/dev/urandom
 	-device virtio-rng-pci,rng=objrng0,id=rng0
 	-device virtio-serial-pci
-	-device virtio-vga-gl,xres=2560,yres=1440
-	-vga none
+	# -device virtio-vga-gl,xres=2560,yres=1440
+	# -vga none
 	# -vga virtio
-	-display ${DP}
+	# -display ${DP}
 
-  # -device qxl-vga
-  # -global qxl-vga.ram_size=4194304 -global qxl-vga.vram_size=4194304 -global qxl-vga.vgamem_mb=4096
-  # -spice agent-mouse=off,addr=/tmp/${NETNAME}/spice.sock,unix=on,disable-ticketing=on,rendernode=${NV_RENDER}
+  -device qxl-vga
+  -global qxl-vga.ram_size=4194304 -global qxl-vga.vram_size=4194304 -global qxl-vga.vgamem_mb=4096
+  -spice agent-mouse=off,addr=/tmp/${NETNAME}/spice.sock,unix=on,disable-ticketing=on,rendernode=${NV_RENDER}
 
 	-usb
 	-device usb-tablet
@@ -100,18 +100,18 @@ args=(
 	-device ide-cd,bus=ide.0,id=sata0-0-0
 	-device virtio-serial-pci
 
-	-chardev socket,id=charchannel0,path="${NETNAME}-agent.sock",server=on,wait=off
-	# -chardev socket,id=charchannel0,server=on,wait=off
-	-device virtserialport,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
-	 # -device virtio-serial,packed=on,ioeventfd=on
-	-chardev qemu-vdagent,id=charchannel1,name=vdagent,clipboard=on
-	-device virtserialport,chardev=charchannel1,id=channel1,name=com.redhat.spice.0
+	# -chardev socket,id=charchannel0,path="${NETNAME}-agent.sock",server=on,wait=off
+	# # -chardev socket,id=charchannel0,server=on,wait=off
+	# -device virtserialport,chardev=charchannel0,id=channel0,name=org.qemu.guest_agent.0
+	#  # -device virtio-serial,packed=on,ioeventfd=on
+	# -chardev qemu-vdagent,id=charchannel1,name=vdagent,clipboard=on
+	# -device virtserialport,chardev=charchannel1,id=channel1,name=com.redhat.spice.0
 
-	# -device virtio-serial
-	# -chardev socket,path=/tmp/qga.sock,server=on,wait=off,id=qga0
-	# -device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0
-	# -chardev spicevmc,id=ch1,name=vdagent,clipboard=on
-	# -device virtserialport,chardev=ch1,id=ch1,name=com.redhat.spice.0
+	-device virtio-serial
+	-chardev socket,path=/tmp/qga.sock,server=on,wait=off,id=qga0
+	-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0
+	-chardev spicevmc,id=ch1,name=vdagent,clipboard=on
+	-device virtserialport,chardev=ch1,id=ch1,name=com.redhat.spice.0
 
 	-device ich9-intel-hda,id=sound0,bus=pcie.0,addr=0x1b
 	-device hda-duplex,id=sound0-codec0,bus=sound0.0,cad=0
